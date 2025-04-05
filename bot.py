@@ -60,8 +60,6 @@ def main() -> None:
     env = Env()
     env.read_env()
 
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = env.str('GOOGLE_APPLICATION_CREDENTIALS')
-
     tg_bot_token = env.str('TELEGRAM_BOT_TOKEN')
 
     updater = Updater(tg_bot_token)
