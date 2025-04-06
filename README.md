@@ -7,7 +7,11 @@
 ### Примеры работающих ботов:
 **Telegram-бот:** Перейдите по ссылке, чтобы увидеть пример работы [Telegram-бота](https://t.me/game_0f_verbs_bot).
 
+![ScreenRecording_04-06-2025 22-01-37_1](https://github.com/user-attachments/assets/8584bc0f-10ae-4e2f-9bff-b8ef14d421d8)
+
 **VK-бот:** Заходите в [группу в ВКонтакте](https://vk.com/club229560473) и напишите сообщение в чат, чтобы увидеть, как бот работает.
+
+![ScreenRecording_04-06-2025 22-07-53_1](https://github.com/user-attachments/assets/2d8cee80-d51d-480f-8ef0-8cb7d483253a)
 
 ## Установка и настройка
 
