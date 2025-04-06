@@ -1,10 +1,16 @@
 import logging
-import os
 
 from environs import Env
-from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 from google.cloud import dialogflow
+from telegram import ForceReply, Update
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    MessageHandler,
+    Filters,
+    CallbackContext,
+)
+from google.api_core.exceptions import GoogleAPICallError, InvalidArgument
 
 
 logging.basicConfig(
@@ -43,17 +49,10 @@ def help_command(update: Update, context: CallbackContext) -> None:
 def handle_message(update: Update, context: CallbackContext) -> None:
     user_message = update.message.text
     user_id = str(update.effective_user.id)
+    project_id = context.bot_data['dialogflow_project_id']
 
-    env = Env()
-    env.read_env()
-    project_id = env.str('DIALOGFLOW_PROJECT_ID')
-
-    try:
-        reply = detect_intent_text(project_id, user_id, user_message)
-        update.message.reply_text(reply)
-    except Exception as e:
-        logger.exception("Ошибка при обращении к DialogFlow:")
-        update.message.reply_text("Ой, что-то пошло не так. Попробуй позже!")
+    reply = detect_intent_text(project_id, user_id, user_message)
+    update.message.reply_text(reply)
 
 
 def main() -> None:
@@ -61,21 +60,31 @@ def main() -> None:
     env.read_env()
 
     tg_bot_token = env.str('TELEGRAM_BOT_TOKEN')
+    dialogflow_project_id = env.str('DIALOGFLOW_PROJECT_ID')
 
     updater = Updater(tg_bot_token)
     dispatcher = updater.dispatcher
+    dispatcher.bot_data['dialogflow_project_id'] = dialogflow_project_id
 
-    # Обработчики команд
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
 
-    # Обработчик сообщений
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    def safe_handle_message(update: Update, context: CallbackContext) -> None:
+        try:
+            handle_message(update, context)
+        except (GoogleAPICallError, InvalidArgument) as e:
+            logger.warning("Ошибка при обращении к DialogFlow: %s", e)
+            update.message.reply_text("Ой, я не могу сейчас ответить. Попробуй позже.")
+        except Exception as e:
+            logger.exception("Неизвестная ошибка:")
+            update.message.reply_text("Что-то пошло не так. Напиши позже!")
 
-    # Запуск бота
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, safe_handle_message))
+
     updater.start_polling()
     updater.idle()
 
 
 if __name__ == '__main__':
     main()
+
