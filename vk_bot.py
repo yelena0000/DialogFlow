@@ -15,6 +15,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def send_error_to_telegram(error_message, tg_bot_token, chat_id):
+    from telegram import Bot
+    bot = Bot(token=tg_bot_token)
+    bot.send_message(chat_id=chat_id, text=f"❗ Ошибка: {error_message}")
+
+
 def detect_intent_text(project_id, session_id, text, language_code='ru'):
     session_client = dialogflow.SessionsClient()
     session = session_client.session_path(project_id, session_id)
@@ -41,12 +47,14 @@ def handle_dialogflow_answer(event, vk_api, project_id, language_code='ru'):
         )
 
 
-def main() -> None:
+def main():
     env = Env()
     env.read_env()
 
     vk_group_token = env.str('VK_GROUP_TOKEN')
     dialogflow_project_id = env.str('DIALOGFLOW_PROJECT_ID')
+    tg_bot_token = env.str('TG_BOT_TOKEN')
+    chat_id = env.str('TG_CHAT_ID')
 
     vk_session = vk.VkApi(token=vk_group_token)
     vk_api = vk_session.get_api()
@@ -58,8 +66,10 @@ def main() -> None:
                 handle_dialogflow_answer(event, vk_api, dialogflow_project_id)
             except (GoogleAPICallError, InvalidArgument) as e:
                 logger.warning("Ошибка при обращении к DialogFlow: %s", e)
+                send_error_to_telegram(str(e), tg_bot_token, chat_id)
             except Exception as e:
                 logger.exception("Неизвестная ошибка при обработке сообщения")
+                send_error_to_telegram(str(e), tg_bot_token, chat_id)
 
 
 if __name__ == "__main__":
