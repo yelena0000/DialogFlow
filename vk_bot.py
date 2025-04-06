@@ -1,9 +1,18 @@
 import random
+import logging
 
+from environs import Env
+from google.api_core.exceptions import GoogleAPICallError, InvalidArgument
+from google.cloud import dialogflow
 import vk_api as vk
 from vk_api.longpoll import VkLongPoll, VkEventType
-from google.cloud import dialogflow
-from environs import Env
+
+
+logging.basicConfig(
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 
 def detect_intent_text(project_id, session_id, text, language_code='ru'):
@@ -17,32 +26,19 @@ def detect_intent_text(project_id, session_id, text, language_code='ru'):
         request={"session": session, "query_input": query_input}
     )
 
-    return response.query_result.fulfillment_text
+    return response.query_result
 
 
-def handle_dialogflow(event, vk_api, project_id):
+def handle_dialogflow_answer(event, vk_api, project_id, language_code='ru'):
     session_id = str(event.user_id)
-    user_message = event.text
+    query_result = detect_intent_text(project_id, session_id, event.text, language_code)
 
-    try:
-        answer = detect_intent_text(
-            project_id=project_id,
-            session_id=session_id,
-            text=user_message,
-            language_code='ru'
+    if not query_result.intent.is_fallback:
+        vk_api.messages.send(
+            user_id=event.user_id,
+            message=query_result.fulfillment_text,
+            random_id=random.randint(1, 100000)
         )
-    except Exception as e:
-        print(f"Ошибка при обращении к DialogFlow: {e}")
-        answer = "Произошла ошибка. Попробуйте позже."
-
-    if not answer:
-        answer = "Извините, я вас не понял."
-
-    vk_api.messages.send(
-        user_id=event.user_id,
-        message=answer,
-        random_id=random.randint(1, 100000)
-    )
 
 
 def main() -> None:
@@ -58,7 +54,12 @@ def main() -> None:
 
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            handle_dialogflow(event, vk_api, dialogflow_project_id)
+            try:
+                handle_dialogflow_answer(event, vk_api, dialogflow_project_id)
+            except (GoogleAPICallError, InvalidArgument) as e:
+                logger.warning("Ошибка при обращении к DialogFlow: %s", e)
+            except Exception as e:
+                logger.exception("Неизвестная ошибка при обработке сообщения")
 
 
 if __name__ == "__main__":
