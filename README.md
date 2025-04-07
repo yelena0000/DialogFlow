@@ -34,6 +34,7 @@ TG_BOT_TOKEN=ваш_токен_телеграм_бота
 VK_GROUP_TOKEN=ваш_токен_группы_вк
 DIALOGFLOW_PROJECT_ID=ваш_id_проекта_dialogflow
 TG_CHAT_ID=ваш_чат_айди_для_получения_ошибок
+GOOGLE_APPLICATION_CREDENTIALS=путь_к_файлу_учётных_данных
 ```
 `TG_BOT_TOKEN` — токен **Telegram-бота**, созданного через [BotFather](https://telegram.me/BotFather). Сохраните и укажите его здесь.
 
@@ -42,6 +43,9 @@ TG_CHAT_ID=ваш_чат_айди_для_получения_ошибок
 `DIALOGFLOW_PROJECT_ID` — ID проекта Dialogflow. Найти его можно в **Google Cloud Console**.
 
 `TG_CHAT_ID` — ID чата в Telegram, куда будут отправляться сообщения об ошибках, если что-то пойдёт не так с ботами.
+
+`GOOGLE_APPLICATION_CREDENTIALS` — путь к JSON-файлу с учётными данными сервисного аккаунта Google. Этот файл нужен для авторизации при работе с Dialogflow API.
+Получить его можно в разделе IAM → Сервисные аккаунты в Google Cloud Console. При создании ключа выберите формат JSON.
 
 ## Запуск бота
 ### Для запуска Telegram-бота выполните команду:
