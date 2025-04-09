@@ -7,12 +7,7 @@ from google.cloud import dialogflow
 import vk_api as vk
 from vk_api.longpoll import VkLongPoll, VkEventType
 
-
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__file__)
 
 
 def send_error_to_telegram(error_message, tg_bot_token, chat_id):
@@ -36,7 +31,7 @@ def detect_intent_text(project_id, session_id, text, language_code='ru'):
 
 
 def handle_dialogflow_answer(event, vk_api, project_id, language_code='ru'):
-    session_id = str(event.user_id)
+    session_id = f"vk-{event.user_id}"
     query_result = detect_intent_text(project_id, session_id, event.text, language_code)
 
     if not query_result.intent.is_fallback:
@@ -48,6 +43,12 @@ def handle_dialogflow_answer(event, vk_api, project_id, language_code='ru'):
 
 
 def main():
+    logging.basicConfig(
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        level=logging.INFO
+    )
+    logger.setLevel(logging.DEBUG)
+
     env = Env()
     env.read_env()
 
