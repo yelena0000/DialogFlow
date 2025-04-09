@@ -12,12 +12,7 @@ from telegram.ext import (
     CallbackContext,
 )
 
-
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__file__)
 
 
 def send_error_to_telegram(error_message, tg_bot_token, chat_id):
@@ -55,10 +50,10 @@ def help_command(update: Update, context: CallbackContext):
 def handle_message(update: Update, context: CallbackContext):
     try:
         user_message = update.message.text
-        user_id = str(update.effective_user.id)
+        session_id = f"tg-{update.effective_user.id}"
         project_id = context.bot_data['dialogflow_project_id']
 
-        reply = detect_intent_text(project_id, user_id, user_message)
+        reply = detect_intent_text(project_id, session_id, user_message)
         update.message.reply_text(reply)
 
     except (GoogleAPICallError, InvalidArgument) as e:
@@ -72,6 +67,12 @@ def handle_message(update: Update, context: CallbackContext):
 
 
 def main():
+    logging.basicConfig(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        level=logging.INFO
+    )
+    logger.setLevel(logging.DEBUG)
+
     env = Env()
     env.read_env()
 
