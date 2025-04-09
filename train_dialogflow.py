@@ -26,7 +26,7 @@ def create_intent(project_id, display_name, training_phrases_parts, message_text
     )
 
     response = intents_client.create_intent(request={"parent": parent, "intent": intent})
-    print(f"✅ Создан интент: {response.display_name}")
+    return response
 
 
 def main():
@@ -41,7 +41,8 @@ def main():
     for intent_name, intent_data in questions_contents.items():
         questions = intent_data["questions"]
         answer = intent_data["answer"]
-        create_intent(project_id, intent_name, questions, [answer])
+        response = create_intent(project_id, intent_name, questions, [answer])
+        print(f"✅ Создан интент: {response.display_name}")
 
 
 if __name__ == "__main__":
